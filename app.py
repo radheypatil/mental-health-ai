@@ -23,12 +23,17 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'mental-health-ai-companion-secret-key-prod-2026')
 
 # MySQL Configuration from environment variables
-app.config['MYSQL_HOST'] = os.getenv('DB_HOST', os.getenv('MYSQL_HOST', 'localhost'))
+mysql_host = os.getenv('DB_HOST', os.getenv('MYSQL_HOST', 'localhost'))
+app.config['MYSQL_HOST'] = mysql_host
 app.config['MYSQL_USER'] = os.getenv('DB_USER', os.getenv('MYSQL_USER', 'root'))
 app.config['MYSQL_PASSWORD'] = os.getenv('DB_PASSWORD', os.getenv('MYSQL_PASSWORD', 'Radhey2005@'))
 app.config['MYSQL_DB'] = os.getenv('DB_NAME', os.getenv('MYSQL_DB', 'mental_wellness_db'))
 app.config['MYSQL_PORT'] = int(os.getenv('DB_PORT', os.getenv('MYSQL_PORT', 3306)))
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+
+# Enable SSL automatically for cloud providers like TiDB Cloud or Aiven
+if os.getenv('DB_SSL', 'false').lower() in ('true', '1', 'required') or 'tidbcloud' in mysql_host.lower() or 'aiven' in mysql_host.lower():
+    app.config['MYSQL_CUSTOM_OPTIONS'] = {'ssl': {'ssl_mode': 'REQUIRED'}}
 
 mysql = MySQL(app)
 

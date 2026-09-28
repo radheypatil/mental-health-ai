@@ -13,13 +13,21 @@ DB_PORT = int(os.getenv('DB_PORT', os.getenv('MYSQL_PORT', 3306)))
 
 print(f"Connecting to MySQL server at {DB_HOST}:{DB_PORT} as user '{DB_USER}'...")
 
-connection = pymysql.connect(
-    host=DB_HOST,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    port=DB_PORT,
-    cursorclass=pymysql.cursors.DictCursor
-)
+ssl_config = None
+if os.getenv('DB_SSL', 'false').lower() in ('true', '1', 'required') or 'tidbcloud' in DB_HOST.lower() or 'aiven' in DB_HOST.lower():
+    ssl_config = {'ssl_mode': 'VERIFY_IDENTITY'}
+
+connect_kwargs = {
+    'host': DB_HOST,
+    'user': DB_USER,
+    'password': DB_PASSWORD,
+    'port': DB_PORT,
+    'cursorclass': pymysql.cursors.DictCursor
+}
+if ssl_config:
+    connect_kwargs['ssl'] = ssl_config
+
+connection = pymysql.connect(**connect_kwargs)
 
 try:
     with connection.cursor() as cursor:
